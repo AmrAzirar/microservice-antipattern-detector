@@ -1,0 +1,22 @@
+openapi: 3.0.0
+
+info:
+  title: Auth Service
+  version: 1.0.0
+
+paths:
+  /auth/login:
+    post:
+      summary: Connexion utilisateur
+
+  /auth/logout:
+    post:
+      summary: Déconnexion
+
+  /auth/register:
+    post:
+      summary: Inscription
+
+  /auth/refresh:
+    post:
+      summary: Rafraîchir le token

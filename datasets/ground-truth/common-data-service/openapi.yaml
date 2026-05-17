@@ -1,0 +1,74 @@
+openapi: 3.0.0
+
+info:
+  title: Common Data Service
+  version: 1.0.0
+
+paths:
+  /products:
+    get:
+      summary: Liste des produits
+    post:
+      summary: Créer un produit
+
+  /products/{id}:
+    get:
+      summary: Récupérer un produit
+    put:
+      summary: Modifier un produit
+    delete:
+      summary: Supprimer un produit
+
+  /categories:
+    get:
+      summary: Liste des catégories
+    post:
+      summary: Créer une catégorie
+
+  /categories/{id}:
+    get:
+      summary: Récupérer une catégorie
+    put:
+      summary: Modifier une catégorie
+
+  /orders:
+    get:
+      summary: Liste des commandes
+    post:
+      summary: Créer une commande
+
+  /orders/{id}:
+    get:
+      summary: Récupérer une commande
+    put:
+      summary: Modifier une commande
+    delete:
+      summary: Supprimer une commande
+
+  /filters:
+    get:
+      summary: Liste des filtres
+
+  /reviews:
+    get:
+      summary: Liste des avis
+    post:
+      summary: Créer un avis
+
+  /users:
+    get:
+      summary: Liste des utilisateurs
+
+  /dashboard:
+    get:
+      summary: Dashboard admin
+
+  /users/{id}:
+      get:
+        summary: Récupérer un utilisateur
+      put:
+        summary: Modifier un utilisateur
+
+  /stats:
+      get:
+        summary: Statistiques
