@@ -1,16 +1,16 @@
 # Antipattern Detector
 
-Outil CLI Python d'analyse statique d'architectures microservices. Il détecte automatiquement les anti-patterns architecturaux à partir des fichiers de configuration d'un projet (Docker Compose, OpenAPI, fichiers source).
+Outil CLI Python d'analyse statique d'architectures microservices. Il détecte automatiquement les anti-patterns architecturaux à partir des fichiers de configuration d'un projet (Docker Compose, OpenAPI, annotations Java, fichiers source).
 
 ---
 
 ## Anti-patterns détectés
 
-| Anti-pattern | Sévérité | Source analysée |
+| Anti-pattern | Sévérité | Sources analysées |
 |---|---|---|
-| **Shared Database** | CRITICAL | `docker-compose.yml` |
+| **Shared Database** | CRITICAL | `docker-compose.yml`, `application.properties`, `application.yml`, `.env` |
 | **Cyclic Dependencies** | CRITICAL | `docker-compose.yml` |
-| **God Service** | WARNING / CRITICAL | `openapi.yaml` / `swagger.yaml` |
+| **God Service** | WARNING / CRITICAL | `openapi.yaml` / `swagger.yaml`, annotations Spring Boot (`@*Mapping`) |
 | **Hardcoded Endpoints** | CRITICAL | Fichiers source (`.java`, `.py`, `.js`, `.properties`, `.yml`, `.env`, `.conf`) |
 
 ---
@@ -19,40 +19,46 @@ Outil CLI Python d'analyse statique d'architectures microservices. Il détecte a
 
 ```
 antipattern-detector/
-├── main.py                    # Point d'entrée CLI
+├── main.py                        # Point d'entrée CLI
 ├── parsers/
-│   ├── docker_compose.py      # Parse docker-compose.yml → services + dépendances
-│   └── openapi.py             # Parse openapi.yaml → liste d'endpoints
+│   ├── docker_compose.py          # Parse docker-compose.yml → services + dépendances
+│   ├── openapi.py                 # Parse openapi.yaml → liste d'endpoints
+│   ├── java_parser.py             # Détecte les endpoints via annotations Spring Boot
+│   └── properties_parser.py      # Parse application.properties / application.yml / .env
 ├── graph/
-│   └── builder.py             # Construit un graphe dirigé (NetworkX DiGraph)
+│   └── builder.py                 # Construit un graphe dirigé (NetworkX DiGraph)
 ├── detectors/
-│   ├── base.py                # Classe abstraite BaseDetector
-│   ├── shared_db.py           # Détecte plusieurs services sur la même DB
-│   ├── cyclic_deps.py         # Détecte les cycles dans le graphe de dépendances
-│   ├── god_service.py         # Détecte les services avec trop d'endpoints
-│   └── hardcoded_endpoints.py # Détecte les URLs/IPs/ports écrits en dur
+│   ├── base.py                    # Classe abstraite BaseDetector
+│   ├── shared_db.py               # Détecte plusieurs services sur la même DB
+│   ├── cyclic_deps.py             # Détecte les cycles dans le graphe de dépendances
+│   ├── god_service.py             # Détecte les services avec trop d'endpoints
+│   └── hardcoded_endpoints.py     # Détecte les URLs/IPs/ports écrits en dur
 ├── report/
-│   └── generator.py           # Générateur de rapport (en cours)
-├── tests/                     # Scripts de test manuels par détecteur
+│   ├── generator.py               # Génère un rapport HTML avec score architectural
+│   └── template.html              # Template Jinja2 du rapport
+├── tests/                         # Tests unitaires par détecteur
+├── .github/
+│   └── workflows/
+│       └── arch-check.yml         # Pipeline CI/CD GitHub Actions
 └── datasets/
-    ├── ecommerce/             # Dataset e-commerce de test
-    └── ground-truth/          # Dataset de référence avec anti-patterns intentionnels
+    └── ground-truth/              # Dataset de référence avec anti-patterns intentionnels
 ```
 
 ---
 
 ## Fonctionnement
 
-Le pipeline d'analyse suit 4 étapes :
+Le pipeline d'analyse suit 5 étapes :
 
 ```
-1. PARSE    → Lecture docker-compose.yml + fichiers OpenAPI
+1. PARSE    → Lecture docker-compose.yml + fichiers OpenAPI + configs DB
 2. GRAPH    → Construction du graphe de dépendances (NetworkX)
-3. DETECT   → Exécution de chaque détecteur
+3. DETECT   → Exécution de chaque détecteur (multi-sources)
 4. REPORT   → Affichage des violations + Quality Gate
+5. HTML     → Génération d'un rapport HTML avec score architectural (0-100)
 ```
 
-Si aucun `docker-compose.yml` n'est trouvé, les détecteurs Shared Database et Cyclic Dependencies sont ignorés. Le détecteur God Service et Hardcoded Endpoints fonctionnent de manière indépendante.
+Si aucun `docker-compose.yml` n'est trouvé, les détecteurs Shared Database (source docker-compose) et Cyclic Dependencies sont ignorés. Les autres détecteurs fonctionnent de manière indépendante.
 
 ---
 
@@ -101,6 +107,8 @@ python main.py --path datasets/ground-truth
    Services : ['authentication-service', 'common-data-service', 'payment-service']
    Message  : 3 services partagent la même base : mysql-db/${DB_SCHEMA}
 
+📄 Rapport généré : report.html
+
 =======================================================
 ❌ Quality Gate FAILED — 1 anti-pattern(s) critique(s)
 =======================================================
@@ -119,35 +127,90 @@ L'outil retourne un **code de sortie** utilisable en CI/CD :
 
 ---
 
+## Rapport HTML
+
+Après chaque analyse, un fichier `report.html` est généré automatiquement. Il contient :
+
+- Un **score architectural de 0 à 100** (vert ≥ 80, orange ≥ 50, rouge < 50)
+- La liste complète des violations avec sévérité, services concernés et message
+- La date et le chemin du projet analysé
+
+Déductions du score :
+- `-20` par violation CRITICAL
+- `-10` par violation WARNING
+
+---
+
 ## Détails des détecteurs
 
 ### Shared Database
-Détecte plusieurs services partageant la même base de données (même `DB_HOST` + `DB_SCHEMA` dans les variables d'environnement Docker).
+
+Détecte plusieurs services qui partagent la même base de données. Analyse quatre sources :
+
+1. **docker-compose.yml** — variables d'environnement `DB_HOST` + `DB_SCHEMA`
+2. **application.properties** — clé `datasource.url` / `db.url` / `jdbc.url`
+3. **application.yml** — clé `spring.datasource.url`
+4. **.env** — variables `DB_HOST`, `DATABASE_HOST`, `MYSQL_HOST`, `POSTGRES_HOST` + noms de base correspondants
 
 ### Cyclic Dependencies
+
 Construit un graphe orienté à partir des `depends_on` Docker Compose, puis détecte les cycles via `networkx.simple_cycles()`.
 
 ### God Service
-Analyse les fichiers `openapi.yaml` / `swagger.yaml` et compte les endpoints HTTP. Seuils configurables dans `god_service.py` :
+
+Analyse les endpoints exposés par chaque service via deux sources complémentaires :
+
+1. **OpenAPI / Swagger** — compte les paths dans `openapi.yaml` ou `swagger.yaml`
+2. **Annotations Spring Boot** — détecte `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping`, `@PatchMapping`, `@RequestMapping` dans les fichiers `@RestController` / `@Controller`
+
+Si un service est couvert par OpenAPI, la source Java est ignorée pour éviter les doublons.
+
+Seuils configurables dans `god_service.py` :
 - `WARNING_THRESHOLD = 10` endpoints
 - `CRITICAL_THRESHOLD = 15` endpoints
 
 ### Hardcoded Endpoints
-Scan par regex des fichiers source pour détecter les URLs écrites en dur. Trois patterns :
-- IP hardcodée : `http://192.168.x.x:port`
-- Localhost hardcodé : `http://localhost:port/path`
-- Port hardcodé : `http://hostname:port`
 
-Une whitelist évite les faux positifs (`${...}`, `example.com`, commentaires, `localhost:8080`).
+Scan par regex des fichiers source pour détecter les URLs écrites en dur. Trois patterns :
+
+- **IP hardcodée** : `http://192.168.x.x:port`
+- **Localhost hardcodé** : `http://localhost:port/path`
+- **Port hardcodé** : `http://hostname:port`
+
+Extensions analysées : `.java`, `.py`, `.js`, `.properties`, `.yml`, `.yaml`, `.env`, `.conf`
+
+Une whitelist évite les faux positifs : variables Spring `${...}`, `example.com`, commentaires (`//`, `#`, `*`), `localhost:8080`.
+
+---
+
+## Intégration CI/CD
+
+Le workflow `.github/workflows/arch-check.yml` s'exécute automatiquement sur chaque push vers `main`, `master` ou `develop`, et sur chaque Pull Request vers `main` ou `master`.
+
+```yaml
+- name: Run Anti-Pattern Detector
+  run: python main.py --path .
+
+- name: Upload Architecture Report
+  uses: actions/upload-artifact@v3
+  if: always()
+  with:
+    name: architecture-report
+    path: report.html
+```
+
+Le rapport HTML est uploadé en artifact GitHub Actions à chaque exécution, même en cas d'échec du Quality Gate.
 
 ---
 
 ## Datasets de test
 
-- `datasets/ground-truth/` — projet de référence avec anti-patterns intentionnels :
-  - `docker-compose.yml` : 3 services sur la même DB (`mysql-db`) → Shared Database CRITICAL
-  - `hardcoded-example.properties` : URLs IP et localhost en dur
-  - `auth-service/openapi.yaml` et `common-data-service/openapi.yaml` : specs OpenAPI pour tester God Service
+`datasets/ground-truth/` — projet de référence avec anti-patterns intentionnels :
+
+- `docker-compose.yml` : 3 services sur la même DB (`mysql-db`) → Shared Database CRITICAL
+- `hardcoded-example.properties` : URLs IP et localhost en dur → Hardcoded Endpoints CRITICAL
+- `auth-service/openapi.yaml` et `common-data-service/openapi.yaml` : specs OpenAPI pour tester God Service
+- `*/src/main/resources/application.properties` : configs DB Spring Boot pour tester Shared Database via fichiers de config
 
 ---
 
@@ -157,4 +220,4 @@ Une whitelist évite les faux positifs (`${...}`, `example.com`, commentaires, `
 |---|---|
 | `pyyaml` | Parsing des fichiers YAML |
 | `networkx` | Graphe de dépendances + détection de cycles |
-| `jinja2` | Génération de rapports (à venir) |
+| `jinja2` | Génération du rapport HTML |
