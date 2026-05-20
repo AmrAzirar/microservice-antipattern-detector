@@ -1,0 +1,33 @@
+name: Architecture Anti-Pattern Check
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  detect-antipatterns:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml networkx jinja2
+
+      - name: Run Anti-Pattern Detector
+        run: python main.py --path .
+
+      - name: Upload Architecture Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: architecture-report
+          path: report.html
