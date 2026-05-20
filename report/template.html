@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Report</title>
+    <style>
+        /* ── LIGHT MODE ── */
+        :root {
+            --bg:           #f5f5f7;
+            --surface:      #ffffff;
+            --surface-2:    #f5f5f7;
+            --border:       #d2d2d7;
+            --text:         #1d1d1f;
+            --text-2:       #6e6e73;
+            --red:          #ff3b30;
+            --red-soft:     #fff1f0;
+            --orange:       #ff9500;
+            --orange-soft:  #fff8ec;
+            --green:        #34c759;
+            --green-soft:   #f0fdf4;
+            --blue:         #0071e3;
+            --blue-soft:    #f0f7ff;
+            --radius:       18px;
+            --radius-sm:    10px;
+            --shadow:       0 2px 20px rgba(0,0,0,0.08);
+            --shadow-sm:    0 1px 4px rgba(0,0,0,0.06);
+            --font:         -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', sans-serif;
+        }
+
+        /* ── DARK MODE ── */
+        [data-theme="dark"] {
+            --bg:           #000000;
+            --surface:      #1c1c1e;
+            --surface-2:    #2c2c2e;
+            --border:       #3a3a3c;
+            --text:         #f5f5f7;
+            --text-2:       #98989d;
+            --red-soft:     rgba(255,59,48,0.15);
+            --orange-soft:  rgba(255,149,0,0.15);
+            --green-soft:   rgba(52,199,89,0.15);
+            --blue-soft:    rgba(0,113,227,0.15);
+            --shadow:       0 2px 20px rgba(0,0,0,0.4);
+            --shadow-sm:    0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            min-height: 100vh;
+            padding: 48px 24px;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container { max-width: 860px; margin: 0 auto; }
+
+        /* ── THEME TOGGLE ── */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            z-index: 100;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            font-family: var(--font);
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .toggle-icon { font-size: 14px; }
+
+        /* ── HEADER ── */
+        .header { margin-bottom: 40px; }
+
+        .breadcrumb {
+            font-size: 11px;
+            color: var(--text-2);
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .breadcrumb span { color: var(--blue); }
+
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header h1 {
+            font-size: 38px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        .header h1 em { font-style: normal; color: var(--blue); }
+
+        .header-meta { text-align: right; }
+        .header-meta .date    { font-size: 12px; color: var(--text-2); }
+        .header-meta .project { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+
+        .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+        /* ── SCORE SECTION ── */
+        .score-section {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+
+        .score-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .score-ring {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 12px;
+        }
+
+        .score-ring svg { transform: rotate(-90deg); }
+
+        .score-ring-value {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-number { font-size: 28px; font-weight: 600; line-height: 1; }
+        .score-sub    { font-size: 10px; color: var(--text-2); margin-top: 2px; }
+        .score-label  { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+
+        .score-level {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+
+        .score-green  { color: var(--green); }
+        .score-orange { color: var(--orange); }
+        .score-red    { color: var(--red); }
+
+        .level-critical  { background: var(--red-soft);    color: var(--red); }
+        .level-needs     { background: var(--orange-soft); color: var(--orange); }
+        .level-good      { background: var(--green-soft);  color: var(--green); }
+        .level-excellent { background: var(--blue-soft);   color: var(--blue); }
+
+        /* ── STATS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 22px 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-2);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .stat-critical .stat-number { color: var(--red); }
+        .stat-warning  .stat-number { color: var(--orange); }
+        .stat-total    .stat-number { color: var(--blue); }
+
+        /* ── QUALITY GATE ── */
+        .quality-gate {
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .gate-failed {
+            background: var(--red-soft);
+            border: 1px solid rgba(255,59,48,0.2);
+            color: var(--red);
+        }
+
+        .gate-passed {
+            background: var(--green-soft);
+            border: 1px solid rgba(52,199,89,0.2);
+            color: var(--green);
+        }
+
+        .gate-icon {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .gate-failed .gate-icon { background: var(--red);   color: white; }
+        .gate-passed .gate-icon { background: var(--green); color: white; }
+
+        /* ── SUMMARY ── */
+        .summary-grid {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .summary-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-2);
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s ease;
+        }
+
+        .summary-dot  { width: 8px; height: 8px; border-radius: 50%; }
+        .dot-critical { background: var(--red); }
+        .dot-warning  { background: var(--orange); }
+        .summary-pill strong { color: var(--text); font-weight: 600; }
+
+        /* ── VIOLATIONS ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-2);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .section-count {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--text-2);
+            padding: 2px 8px;
+        }
+
+        .violation-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid transparent;
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s ease, background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .violation-card:hover  { box-shadow: var(--shadow); }
+        .violation-critical    { border-left-color: var(--red); }
+        .violation-warning     { border-left-color: var(--orange); }
+
+        .violation-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .violation-type {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .badge-critical { background: var(--red-soft);    color: var(--red); }
+        .badge-warning  { background: var(--orange-soft); color: var(--orange); }
+
+        .violation-message {
+            font-size: 13px;
+            color: var(--text-2);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .violation-description {
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: var(--text-2);
+            line-height: 1.6;
+            border: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+
+        .desc-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            color: var(--text-2);
+        }
+
+        .violation-solution {
+            background: var(--green-soft);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: var(--green);
+            line-height: 1.6;
+            border: 1px solid rgba(52,199,89,0.2);
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .solution-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+        .violation-meta {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .meta-pill {
+            font-size: 12px;
+            color: var(--text-2);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .meta-pill strong { color: var(--text); font-weight: 500; }
+
+        .services-list { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .service-tag {
+            background: var(--blue-soft);
+            color: var(--blue);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,113,227,0.15);
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 60px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .empty-icon {
+            width: 56px; height: 56px;
+            background: var(--green-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+        }
+
+        .empty-title { font-size: 17px; font-weight: 600; color: var(--green); margin-bottom: 6px; }
+        .empty-sub   { font-size: 14px; color: var(--text-2); }
+
+        /* ── FOOTER ── */
+        .footer {
+            margin-top: 48px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left  { font-size: 12px; color: var(--text-2); }
+        .footer-right { font-size: 11px; color: var(--text-2); }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-section  { animation: fadeUp 0.4s ease both; }
+        .quality-gate   { animation: fadeUp 0.45s ease both; }
+        .summary-grid   { animation: fadeUp 0.5s ease both; }
+        .violation-card { animation: fadeUp 0.5s ease both; }
+        .violation-card:nth-child(2) { animation-delay: 0.05s; }
+        .violation-card:nth-child(3) { animation-delay: 0.10s; }
+        .violation-card:nth-child(4) { animation-delay: 0.15s; }
+    </style>
+</head>
+<body>
+
+    <!-- THEME TOGGLE -->
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+        <span class="toggle-icon">🌙</span>
+        <span id="themeLabel">Dark Mode</span>
+    </button>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="breadcrumb">
+            Microservices Anti-Pattern Detector
+            <span>›</span>
+            <span>{{ project_path }}</span>
+        </div>
+        <div class="header-main">
+            <h1>Architecture <em>Report</em></h1>
+            <div class="header-meta">
+                <div class="date">{{ date }}</div>
+                <div class="project">{{ project_path }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SCORE + STATS -->
+    <div class="score-section">
+        <div class="score-card">
+            <div class="score-ring">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40"
+                        fill="none" stroke="#e5e5ea" stroke-width="7"/>
+                    <circle cx="50" cy="50" r="40"
+                        fill="none"
+                        stroke="{% if score_color == 'green' %}#34c759{% elif score_color == 'orange' %}#ff9500{% else %}#ff3b30{% endif %}"
+                        stroke-width="7"
+                        stroke-dasharray="{{ (score / 100) * 251 }} 251"
+                        stroke-linecap="round"/>
+                </svg>
+                <div class="score-ring-value">
+                    <div class="score-number score-{{ score_color }}">{{ score }}</div>
+                    <div class="score-sub">/100</div>
+                </div>
+            </div>
+            <div class="score-label">Architecture Score</div>
+            <div class="score-level
+                {%- if score >= 80 %} level-excellent
+                {%- elif score >= 50 %} level-good
+                {%- elif score >= 30 %} level-needs
+                {%- else %} level-critical{%- endif %}">
+                {%- if score >= 80 %}Excellent
+                {%- elif score >= 50 %}Good
+                {%- elif score >= 30 %}Needs Improvement
+                {%- else %}Critical{%- endif %}
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card stat-critical">
+                <div class="stat-number">{{ criticals|length }}</div>
+                <div class="stat-label">Critical</div>
+            </div>
+            <div class="stat-card stat-warning">
+                <div class="stat-number">{{ warnings|length }}</div>
+                <div class="stat-label">Warning</div>
+            </div>
+            <div class="stat-card stat-total">
+                <div class="stat-number">{{ total }}</div>
+                <div class="stat-label">Total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUALITY GATE -->
+    {% if criticals %}
+    <div class="quality-gate gate-failed">
+        <div class="gate-icon">✕</div>
+        Quality Gate Failed — {{ criticals|length }} critical anti-pattern(s) detected. Deployment blocked.
+    </div>
+    {% else %}
+    <div class="quality-gate gate-passed">
+        <div class="gate-icon">✓</div>
+        Quality Gate Passed — No critical anti-patterns detected. Deployment authorized.
+    </div>
+    {% endif %}
+
+    <!-- SUMMARY -->
+    {% if violations %}
+    <div class="summary-grid">
+        {% set seen = [] %}
+        {% for v in violations %}
+            {% if v.type not in seen %}
+                {% set _ = seen.append(v.type) %}
+                {% set count = violations | selectattr('type', 'equalto', v.type) | list | length %}
+                <div class="summary-pill">
+                    <div class="summary-dot dot-{{ v.severity|lower }}"></div>
+                    <strong>{{ v.type }}</strong>
+                    <span>({{ count }})</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- VIOLATIONS -->
+    <div class="section-header">
+        <div class="section-title">Detected Anti-Patterns</div>
+        <div class="section-count">{{ total }}</div>
+    </div>
+
+    {% if violations %}
+        {% for v in violations %}
+        <div class="violation-card violation-{{ v.severity|lower }}">
+            <div class="violation-top">
+                <div class="violation-type">{{ v.type }}</div>
+                <div class="badge badge-{{ v.severity|lower }}">{{ v.severity }}</div>
+            </div>
+
+            <div class="violation-message">{{ v.message }}</div>
+
+            {% if v.type == 'Shared Database' %}
+            <div class="violation-description">
+                <div class="desc-label">ℹ️ Description</div>
+                Plusieurs services accèdent à la même base de données, créant un couplage fort qui réduit l'indépendance des équipes et rend le scaling difficile.
+            </div>
+            <div class="violation-solution">
+                <span class="solution-icon">💡</span>
+                <div><strong>Solution :</strong> Appliquer le pattern Database-per-Service — chaque microservice doit avoir sa propre base de données dédiée.</div>
+            </div>
+
+            {% elif v.type == 'God Service' %}
+            <div class="violation-description">
+                <div class="desc-label">ℹ️ Description</div>
+                Ce service implémente trop de responsabilités et d'endpoints, s'apparentant à un monolithe déguisé qui viole le principe de responsabilité unique.
+            </div>
+            <div class="violation-solution">
+                <span class="solution-icon">💡</span>
+                <div><strong>Solution :</strong> Décomposer ce service en plusieurs microservices selon les domaines métier (Domain-Driven Design).</div>
+            </div>
+
+            {% elif v.type == 'Cyclic Dependencies' %}
+            <div class="violation-description">
+                <div class="desc-label">ℹ️ Description</div>
+                Un cycle de dépendances a été détecté entre des services. Cela rend le déploiement indépendant impossible et crée un couplage fort.
+            </div>
+            <div class="violation-solution">
+                <span class="solution-icon">💡</span>
+                <div><strong>Solution :</strong> Introduire un API Gateway ou un message broker (Kafka, RabbitMQ) pour briser le cycle de dépendances.</div>
+            </div>
+
+            {% elif v.type == 'Hardcoded Endpoints' %}
+            <div class="violation-description">
+                <div class="desc-label">ℹ️ Description</div>
+                Des URLs ou adresses IP sont hardcodées dans le code ou les fichiers de configuration, rendant le système fragile aux changements d'infrastructure.
+            </div>
+            <div class="violation-solution">
+                <span class="solution-icon">💡</span>
+                <div><strong>Solution :</strong> Utiliser des variables d'environnement et un service discovery (Consul, Eureka) pour la résolution dynamique des endpoints.</div>
+            </div>
+            {% endif %}
+
+            <div class="violation-meta">
+                {% if v.source %}
+                <div class="meta-pill">Source <strong>{{ v.source }}</strong></div>
+                {% endif %}
+                {% if v.nb_endpoints %}
+                <div class="meta-pill">Endpoints <strong>{{ v.nb_endpoints }}</strong></div>
+                {% endif %}
+            </div>
+
+            <div class="services-list">
+                {% for service in v.services %}
+                <span class="service-tag">{{ service }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">✓</div>
+            <div class="empty-title">No Anti-Patterns Detected</div>
+            <div class="empty-sub">Your architecture is clean and follows best practices.</div>
+        </div>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="footer-left">
+            Based on Taibi &amp; Lenarduzzi (2020) — Microservices Anti-Patterns Taxonomy
+        </div>
+        <div class="footer-right">
+            Microservices Anti-Pattern Detector
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function toggleTheme() {
+        const html  = document.documentElement;
+        const btn   = document.getElementById('themeBtn');
+        const label = document.getElementById('themeLabel');
+        const icon  = btn.querySelector('.toggle-icon');
+
+        if (html.getAttribute('data-theme') === 'light') {
+            html.setAttribute('data-theme', 'dark');
+            icon.textContent  = '☀️';
+            label.textContent = 'Light Mode';
+        } else {
+            html.setAttribute('data-theme', 'light');
+            icon.textContent  = '🌙';
+            label.textContent = 'Dark Mode';
+        }
+    }
+</script>
+
+</body>
+</html>
