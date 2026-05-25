@@ -116,6 +116,9 @@ def run_detection(project_path):
         sys.exit(0)
 
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
     run_detection(args.path)
+
+if __name__ == "__main__":
+    main()
