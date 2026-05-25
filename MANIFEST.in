@@ -1,0 +1,6 @@
+include README.md
+include requirements.txt
+recursive-include report *.html
+recursive-include parsers *.py
+recursive-include detectors *.py
+recursive-include graph *.py
