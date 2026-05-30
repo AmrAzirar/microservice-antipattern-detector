@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\Aorus PC\\\\antipattern-detector\" -Depth 4)",
       "Bash(Select-Object FullName, PSIsContainer)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\"C:\\\\Users\\\\Aorus PC\\\\antipattern-detector\\\\\", \"\"\\) })"
     ]
   }
 }
