@@ -488,13 +488,13 @@
         <div class="breadcrumb">
             Microservices Anti-Pattern Detector
             <span>›</span>
-            <span>datasets/ground-truth</span>
+            <span>C:\Users\AORUSP~1\AppData\Local\Temp\tmpsmkk8yyj\extracted</span>
         </div>
         <div class="header-main">
             <h1>Architecture <em>Report</em></h1>
             <div class="header-meta">
-                <div class="date">26/05/2026 00:53</div>
-                <div class="project">datasets/ground-truth</div>
+                <div class="date">21/06/2026 15:12</div>
+                <div class="project">C:\Users\AORUSP~1\AppData\Local\Temp\tmpsmkk8yyj\extracted</div>
             </div>
         </div>
     </div>
@@ -510,32 +510,32 @@
                         fill="none" stroke="#e5e5ea" stroke-width="7"/>
                     <circle cx="50" cy="50" r="40"
                         fill="none"
-                        stroke="#ff3b30"
+                        stroke="#ff9500"
                         stroke-width="7"
-                        stroke-dasharray="50.2 251"
+                        stroke-dasharray="175.7 251"
                         stroke-linecap="round"/>
                 </svg>
                 <div class="score-ring-value">
-                    <div class="score-number score-red">20</div>
+                    <div class="score-number score-orange">70</div>
                     <div class="score-sub">/100</div>
                 </div>
             </div>
             <div class="score-label">Architecture Score</div>
-            <div class="score-level level-critical">Critical
+            <div class="score-level level-good">Good
             </div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card stat-critical">
-                <div class="stat-number">4</div>
+                <div class="stat-number">1</div>
                 <div class="stat-label">Critical</div>
             </div>
             <div class="stat-card stat-warning">
-                <div class="stat-number">0</div>
+                <div class="stat-number">1</div>
                 <div class="stat-label">Warning</div>
             </div>
             <div class="stat-card stat-total">
-                <div class="stat-number">4</div>
+                <div class="stat-number">2</div>
                 <div class="stat-label">Total</div>
             </div>
         </div>
@@ -545,7 +545,7 @@
     
     <div class="quality-gate gate-failed">
         <div class="gate-icon">✕</div>
-        Quality Gate Failed — 4 critical anti-pattern(s) detected. Deployment blocked.
+        Quality Gate Failed — 1 critical anti-pattern(s) detected. Deployment blocked.
     </div>
     
 
@@ -553,18 +553,6 @@
     
     <div class="summary-grid">
         
-        
-            
-                
-                
-                <div class="summary-pill">
-                    <div class="summary-dot dot-critical"></div>
-                    <strong>Shared Database</strong>
-                    <span>(2)</span>
-                </div>
-            
-        
-            
         
             
                 
@@ -580,8 +568,8 @@
                 
                 
                 <div class="summary-pill">
-                    <div class="summary-dot dot-critical"></div>
-                    <strong>Hardcoded Endpoints</strong>
+                    <div class="summary-dot dot-warning"></div>
+                    <strong>Nano Service</strong>
                     <span>(1)</span>
                 </div>
             
@@ -592,84 +580,10 @@
     <!-- VIOLATIONS -->
     <div class="section-header">
         <div class="section-title">Detected Anti-Patterns</div>
-        <div class="section-count">4</div>
+        <div class="section-count">2</div>
     </div>
 
     
-        
-        <div class="violation-card violation-critical">
-            <div class="violation-top">
-                <div class="violation-type">Shared Database</div>
-                <div class="badge badge-critical">CRITICAL</div>
-            </div>
-
-            <div class="violation-message">3 services partagent la même base : mysql-db/${DB_SCHEMA}</div>
-
-            
-            <div class="violation-description">
-                <div class="desc-label">ℹ️ Description</div>
-                Plusieurs services accèdent à la même base de données, créant un couplage fort qui réduit l'indépendance des équipes et rend le scaling difficile.
-            </div>
-            <div class="violation-solution">
-                <span class="solution-icon">💡</span>
-                <div><strong>Solution :</strong> Appliquer le pattern Database-per-Service — chaque microservice doit avoir sa propre base de données dédiée.</div>
-            </div>
-
-            
-
-            <div class="violation-meta">
-                
-                <div class="meta-pill">Source <strong>docker-compose</strong></div>
-                
-                
-            </div>
-
-            <div class="services-list">
-                
-                <span class="service-tag">authentication-service</span>
-                
-                <span class="service-tag">common-data-service</span>
-                
-                <span class="service-tag">payment-service</span>
-                
-            </div>
-        </div>
-        
-        <div class="violation-card violation-critical">
-            <div class="violation-top">
-                <div class="violation-type">Shared Database</div>
-                <div class="badge badge-critical">CRITICAL</div>
-            </div>
-
-            <div class="violation-message">2 services partagent la même base via config files : localhost/shopdb</div>
-
-            
-            <div class="violation-description">
-                <div class="desc-label">ℹ️ Description</div>
-                Plusieurs services accèdent à la même base de données, créant un couplage fort qui réduit l'indépendance des équipes et rend le scaling difficile.
-            </div>
-            <div class="violation-solution">
-                <span class="solution-icon">💡</span>
-                <div><strong>Solution :</strong> Appliquer le pattern Database-per-Service — chaque microservice doit avoir sa propre base de données dédiée.</div>
-            </div>
-
-            
-
-            <div class="violation-meta">
-                
-                <div class="meta-pill">Source <strong>config files</strong></div>
-                
-                
-            </div>
-
-            <div class="services-list">
-                
-                <span class="service-tag">auth-service</span>
-                
-                <span class="service-tag">payment-service</span>
-                
-            </div>
-        </div>
         
         <div class="violation-card violation-critical">
             <div class="violation-top">
@@ -677,7 +591,7 @@
                 <div class="badge badge-critical">CRITICAL</div>
             </div>
 
-            <div class="violation-message">common-data-service a 17 endpoints via annotations Java (seuil: 15)</div>
+            <div class="violation-message">job-service a 28 endpoints via annotations Java (seuil: 15)</div>
 
             
             <div class="violation-description">
@@ -696,34 +610,25 @@
                 <div class="meta-pill">Source <strong>Java Annotations</strong></div>
                 
                 
-                <div class="meta-pill">Endpoints <strong>17</strong></div>
+                <div class="meta-pill">Endpoints <strong>28</strong></div>
                 
             </div>
 
             <div class="services-list">
                 
-                <span class="service-tag">common-data-service</span>
+                <span class="service-tag">job-service</span>
                 
             </div>
         </div>
         
-        <div class="violation-card violation-critical">
+        <div class="violation-card violation-warning">
             <div class="violation-top">
-                <div class="violation-type">Hardcoded Endpoints</div>
-                <div class="badge badge-critical">CRITICAL</div>
+                <div class="violation-type">Nano Service</div>
+                <div class="badge badge-warning">WARNING</div>
             </div>
 
-            <div class="violation-message">5 endpoint(s) hardcodé(s) détecté(s) dans 1 service(s)</div>
+            <div class="violation-message">notification-service a seulement 2 endpoint(s) — trop petit pour justifier un microservice autonome</div>
 
-            
-            <div class="violation-description">
-                <div class="desc-label">ℹ️ Description</div>
-                Des URLs ou adresses IP sont hardcodées dans le code ou les fichiers de configuration, rendant le système fragile aux changements d'infrastructure.
-            </div>
-            <div class="violation-solution">
-                <span class="solution-icon">💡</span>
-                <div><strong>Solution :</strong> Utiliser des variables d'environnement et un service discovery (Consul, Eureka) pour la résolution dynamique des endpoints.</div>
-            </div>
             
 
             <div class="violation-meta">
@@ -733,7 +638,7 @@
 
             <div class="services-list">
                 
-                <span class="service-tag">ground-truth</span>
+                <span class="service-tag">notification-service</span>
                 
             </div>
         </div>

@@ -6,6 +6,7 @@ from detectors.shared_db import SharedDbDetector
 from detectors.cyclic_deps import CyclicDepsDetector
 from detectors.god_service import GodServiceDetector
 from detectors.hardcoded_endpoints import HardcodedEndpointsDetector
+from detectors.nano_service import NanoServiceDetector
 from graph.builder import build_graph
 from report.generator import generate_report
 
@@ -78,6 +79,10 @@ def run_detection(project_path):
     god_violations = GodServiceDetector().detect(project_path)
     all_violations.extend(god_violations)
 
+    # Nano Service
+    nano_violations = NanoServiceDetector().detect(project_path)
+    all_violations.extend(nano_violations)
+
     # Hardcoded Endpoints
     hardcoded_violations = HardcodedEndpointsDetector().detect(project_path)
     all_violations.extend(hardcoded_violations)
@@ -114,6 +119,51 @@ def run_detection(project_path):
         print("✅ Quality Gate PASSED")
         print("="*55 + "\n")
         sys.exit(0)
+
+
+def run_detection_return(project_path):
+    """
+    Version silencieuse de run_detection qui retourne les violations
+    au lieu de les afficher. Utilisée pour l'interface Streamlit.
+    """
+    all_violations = []
+
+    compose_file = find_docker_compose(project_path)
+
+    if compose_file:
+        services = parse_docker_compose(compose_file)
+        graph = build_graph(services)
+    else:
+        services = {}
+        graph = None
+
+    # Détection
+    shared_db_detector = SharedDbDetector()
+
+    if services:
+        violations = shared_db_detector.detect(services)
+        all_violations.extend(violations)
+
+    config_violations = shared_db_detector.detect_from_configs(project_path)
+    all_violations.extend(config_violations)
+
+    if graph:
+        cyclic_violations = CyclicDepsDetector().detect(graph)
+        all_violations.extend(cyclic_violations)
+
+    god_violations = GodServiceDetector().detect(project_path)
+    all_violations.extend(god_violations)
+
+    nano_violations = NanoServiceDetector().detect(project_path)
+    all_violations.extend(nano_violations)
+
+    hardcoded_violations = HardcodedEndpointsDetector().detect(project_path)
+    all_violations.extend(hardcoded_violations)
+
+    # Générer le rapport HTML
+    generate_report(all_violations, project_path)
+
+    return all_violations
 
 
 def main():

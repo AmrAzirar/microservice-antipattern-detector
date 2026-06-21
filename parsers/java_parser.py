@@ -12,13 +12,32 @@ def is_controller_file(content):
     ])
 
 
+def is_microservice(service_path):
+    """
+    Vérifie si un dossier est un vrai microservice
+    en cherchant des fichiers indicateurs
+    """
+    indicators = [
+        'pom.xml',
+        'build.gradle',
+        'package.json',
+        'requirements.txt',
+        'Dockerfile',
+        'application.properties',
+        'application.yml'
+    ]
+    try:
+        files = os.listdir(service_path)
+        return any(ind in files for ind in indicators)
+    except Exception:
+        return False
+
+
 def count_endpoints_from_java(service_path):
     """
     Compte les endpoints depuis les annotations
     Spring Boot dans les fichiers Java
-    Parcourt récursivement tous les sous-dossiers
     """
-
     endpoint_annotations = [
         r'@GetMapping',
         r'@PostMapping',
@@ -33,7 +52,6 @@ def count_endpoints_from_java(service_path):
 
     for root, dirs, files in os.walk(service_path):
 
-        # Ignorer dossiers non pertinents
         dirs[:] = [d for d in dirs
                   if d not in [
                       '.git', 'target',
@@ -54,11 +72,9 @@ def count_endpoints_from_java(service_path):
                          errors='ignore') as f:
                     content = f.read()
 
-                # Analyser seulement les Controllers
                 if not is_controller_file(content):
                     continue
 
-                # Compter les endpoints
                 file_count = 0
                 for pattern in endpoint_annotations:
                     matches = re.findall(pattern, content)
@@ -83,35 +99,50 @@ def count_endpoints_from_java(service_path):
 
 def find_java_services(project_path):
     """
-    Trouve tous les services Java dans le projet
-    Parcourt récursivement pour trouver
-    les controllers à n'importe quelle profondeur
-    Retourne : dict service_name → résultat
+    Trouve tous les vrais microservices Java
+    Gère toutes les structures de projets :
+    - project/service-a/
+    - project/services/service-a/
+    - project/backend/service-a/
     """
     results = {}
 
-    # Parcourir les dossiers directs = services
-    try:
-        items = os.listdir(project_path)
-    except Exception:
-        return results
+    IGNORE_DIRS = [
+        '.git', 'target', 'node_modules',
+        'venv', '__pycache__', '.github',
+        'client', 'frontend', 'ui', 'web',
+        'docker', 'docs', 'k8s', 'scripts',
+        'uploads', 'resources', 'test', 'tests',
+        'infrastructure', 'terraform', 'ansible',
+        'libs', 'lib', 'common', 'shared'
+    ]
 
-    for item in items:
-        service_path = os.path.join(project_path, item)
+    def scan_directory(path, depth=0):
+        if depth > 3:
+            return
 
-        if not os.path.isdir(service_path):
-            continue
+        try:
+            items = os.listdir(path)
+        except Exception:
+            return
 
-        # Ignorer dossiers non pertinents
-        if item in ['.git', 'target', 'node_modules',
-                    'venv', '__pycache__', '.github',
-                    'datasets', 'report', 'tests']:
-            continue
+        for item in items:
+            item_path = os.path.join(path, item)
 
-        # Chercher controllers dans tout le sous-arbre
-        result = count_endpoints_from_java(service_path)
+            if not os.path.isdir(item_path):
+                continue
 
-        if result["total"] > 0:
-            results[item] = result
+            if item in IGNORE_DIRS:
+                continue
 
+            # C'est un vrai microservice ?
+            if is_microservice(item_path):
+                result = count_endpoints_from_java(item_path)
+                if result["total"] > 0:
+                    results[item] = result
+            else:
+                # Pas un service → descendre d'un niveau
+                scan_directory(item_path, depth + 1)
+
+    scan_directory(project_path)
     return results

@@ -11,6 +11,7 @@ Outil CLI Python d'analyse statique d'architectures microservices. Il détecte a
 | **Shared Database** | CRITICAL | `docker-compose.yml`, `application.properties`, `application.yml`, `.env` |
 | **Cyclic Dependencies** | CRITICAL | `docker-compose.yml` |
 | **God Service** | WARNING / CRITICAL | `openapi.yaml` / `swagger.yaml`, annotations Spring Boot (`@*Mapping`) |
+| **Nano Service** | WARNING | `openapi.yaml` / `swagger.yaml`, annotations Spring Boot (`@*Mapping`) |
 | **Hardcoded Endpoints** | CRITICAL | Fichiers source (`.java`, `.py`, `.js`, `.properties`, `.yml`, `.env`, `.conf`) |
 
 ---
@@ -32,6 +33,7 @@ antipattern-detector/
 │   ├── shared_db.py               # Détecte plusieurs services sur la même DB
 │   ├── cyclic_deps.py             # Détecte les cycles dans le graphe de dépendances
 │   ├── god_service.py             # Détecte les services avec trop d'endpoints
+│   ├── nano_service.py            # Détecte les services avec trop peu d'endpoints
 │   └── hardcoded_endpoints.py     # Détecte les URLs/IPs/ports écrits en dur
 ├── report/
 │   ├── generator.py               # Génère un rapport HTML avec score architectural
@@ -168,6 +170,18 @@ Si un service est couvert par OpenAPI, la source Java est ignorée pour éviter 
 Seuils configurables dans `god_service.py` :
 - `WARNING_THRESHOLD = 10` endpoints
 - `CRITICAL_THRESHOLD = 15` endpoints
+
+### Nano Service
+
+Détecte les microservices trop petits (< 3 endpoints) qui ne justifient pas les coûts opérationnels d'un microservice autonome (base de données, CI/CD, monitoring, déploiement séparé).
+
+Utilise les mêmes sources que God Service :
+1. **OpenAPI / Swagger** — compte les paths dans `openapi.yaml` ou `swagger.yaml`
+2. **Annotations Spring Boot** — compte les annotations `@*Mapping` dans les Controllers
+
+Seuil : `THRESHOLD = 3` endpoints (configurable dans `nano_service.py`)
+
+Un service avec 1-2 endpoints devrait probablement être fusionné avec un service cohérent ou implémenté comme une simple librairie partagée.
 
 ### Hardcoded Endpoints
 

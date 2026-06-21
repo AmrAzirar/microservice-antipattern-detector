@@ -1,0 +1,26 @@
+openapi: 3.0.0
+info:
+  title: Notification Service
+  version: 1.0.0
+  description: Service de notification (exemple Nano Service)
+
+paths:
+  /send-email:
+    post:
+      summary: Envoyer un email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                subject:
+                  type: string
+                body:
+                  type: string
+      responses:
+        '200':
+          description: Email envoyé
