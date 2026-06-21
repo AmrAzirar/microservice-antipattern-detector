@@ -132,6 +132,7 @@ def find_db_configs(project_path):
     dans les sous-dossiers du projet.
     Retourne un dict : service_name → db_info
     """
+    from parsers.java_parser import is_microservice
     results = {}
 
     for root, dirs, files in os.walk(project_path):
@@ -161,24 +162,29 @@ def find_db_configs(project_path):
             if db_info.get('db_host') and \
                db_info.get('db_schema'):
 
-                # Remonter jusqu'au nom du service
-                # datasets/ground-truth/auth-service/src/...
-                # → trouver le dossier sous ground-truth
-                parts = filepath.replace('\\', '/').split('/')
-                
-                # Chercher le dossier qui est
-                # directement sous project_path
-                project_parts = project_path.replace(
-                    '\\', '/').split('/')
-                
-                # Le service = dossier après project_path
-                idx = len(project_parts)
-                if idx < len(parts):
-                    service_name = parts[idx]
-                else:
-                    service_name = os.path.basename(root)
+                # Trouver le vrai service parent
+                service_name = None
+                path = os.path.dirname(filepath)
 
-                # Éviter les doublons — garder le premier
+                while path != project_path and \
+                      path != os.path.dirname(path):
+                    if is_microservice(path):
+                        service_name = os.path.basename(path)
+                        break
+                    path = os.path.dirname(path)
+
+                # Fallback si pas trouvé
+                if not service_name:
+                    parts = filepath.replace('\\', '/').split('/')
+                    project_parts = project_path.replace(
+                        '\\', '/').split('/')
+                    idx = len(project_parts)
+                    if idx < len(parts):
+                        service_name = parts[idx]
+                    else:
+                        service_name = os.path.basename(root)
+
+                # Éviter les doublons
                 if service_name not in results:
                     results[service_name] = db_info
 
